@@ -11,7 +11,8 @@
     "postinstall": "npm cache clean --force",
     "server:build": "tsc -p server/tsconfig.json",
     "server:start": "node server/dist/app.js",
-    "dev": "concurrently \"npm run start\" \"npm run server:build && npm run server:start\""
+    "dev:server": "nodemon --watch 'server/**/*.ts' --exec 'ts-node' server/app.ts",
+    "dev": "concurrently \"npm run start\" \"npm run dev:server\""
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^2.2.0",
@@ -57,8 +58,10 @@
     "concurrently": "^8.2.2",
     "eslint": "^8.19.0",
     "jest": "^29.6.3",
+    "nodemon": "^3.1.10",
     "prettier": "2.8.8",
     "react-test-renderer": "19.1.0",
+    "ts-node": "^10.9.2",
     "typescript": "5.0.4"
   },
   "engines": {

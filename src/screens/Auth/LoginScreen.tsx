@@ -27,12 +27,11 @@ export default function LoginScreen() {
 
     setLoading(true);
     try {
-      const response = await login(email, password);
-      const { token, user } = response.data;
+      const data = await login(email, password);
+      const { token, user } = data;
       await setSession(token, user);
-      // navigation.navigate('AppTabs'); // Next step after auth flow is complete
     } catch (e: any) {
-      const message = e.response?.data?.error || 'An unexpected error occurred.';
+      const message = e.message || 'An unexpected error occurred.';
       setError(message);
     } finally {
       setLoading(false);

@@ -14,7 +14,21 @@ interface User {
   friends?: boolean;
   gamerTag?: string;
   displayName?: string;
-  location?: { country?: string; city?: string };
+  isVerified?: boolean;
+  isOnline?: boolean;
+  gameTags?: string[];
+  bio?: string;
+  followers?: number;
+  following?: number;
+  level?: number;
+  location?: string;
+  joined?: string;
+  stats?: {
+    winRate?: string;
+    kdRatio?: string;
+    hoursPlayed?: string;
+    matches?: string;
+  };
   city?: string;
 }
 
@@ -124,8 +138,25 @@ function seedInitialData() {
       id: 'u1',
       email: 'dev@gameotion.com',
       password: 'password',
-      name: 'Dev User',
-      avatarUrl: 'https://i.pravatar.cc/100?u=dev@gameotion.com',
+      name: 'shubham',
+      displayName: 'shubham',
+      gamerTag: 'ProGamer123',
+      isVerified: true,
+      avatarUrl: 'https://i.pravatar.cc/150?u=shubham',
+      isOnline: true,
+      gameTags: ['Valorant', 'Immortal I'],
+      bio: 'Immortal Valorant player | Content creator | Looking for serious squad',
+      followers: 2847,
+      following: 156,
+      level: 42,
+      location: 'Mumbai, India',
+      joined: 'Jan 2024',
+      stats: {
+        winRate: '73%',
+        kdRatio: '1.85',
+        hoursPlayed: '847h',
+        matches: '1,234',
+      },
       onboarded: true,
     };
     const demoUser2: User = {
@@ -217,9 +248,17 @@ app.post('/posts/:id/share', (req: Request, res: Response) => {
 
 // User endpoints for profile + posts
 app.get('/users/:id', (req: Request, res: Response) => {
-  const user = demoUsers.find((u) => u.id === req.params.id);
+  const user = users.find((u) => u.id === req.params.id);
   if (!user) return res.status(404).json({ error: 'not_found' });
-  return res.json({ user });
+
+  // Ensure all new fields are included in the response
+  const userProfile = {
+    ...user,
+    name: user.displayName || user.name, // Prioritize displayName
+    // Add any other transformations or defaults here if needed
+  };
+
+  return res.json({ user: userProfile });
 });
 
 app.get('/users/:id/posts', (req: Request, res: Response) => {
@@ -362,6 +401,10 @@ userRouter.put('/profile', protect, (req: Request, res: Response) => {
   console.log('Updated user profile:', updatedUser);
 
   res.json({ user: updatedUser });
+});
+
+app.get('/api/notifications', protect, (req, res) => {
+  res.json({ items: mockNotifications });
 });
 
 app.use('/api/user', userRouter);
@@ -605,6 +648,37 @@ app.post('/posts/:id/comments', protect, (req: Request, res: Response) => {
   p.commentsCount = (p.commentsCount || 0) + 1;
   return res.status(201).json({ comment });
 });
+
+const mockNotifications = [
+  {
+    id: '1',
+    type: 'follow',
+    user: { id: 'u2', name: 'kaushallchaudhari', avatarUrl: 'https://i.pravatar.cc/100?img=2' },
+    createdAt: new Date(Date.now() - 1000 * 60 * 5).toISOString(), // 5 minutes ago
+  },
+  {
+    id: '2',
+    type: 'like',
+    user: { id: 'u3', name: 'dhrumilvyas_3012', avatarUrl: 'https://i.pravatar.cc/100?img=3' },
+    post: { id: 'p1', text: 'Check out my new setup! 🚀' },
+    createdAt: new Date(Date.now() - 1000 * 60 * 60).toISOString(), // 1 hour ago
+  },
+  {
+    id: '3',
+    type: 'comment',
+    user: { id: 'u4', name: 'gaming_pro', avatarUrl: 'https://i.pravatar.cc/100?img=4' },
+    post: { id: 'p1', text: 'Check out my new setup! 🚀' },
+    comment: 'That looks amazing! What keyboard is that?',
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(), // 3 hours ago
+  },
+  {
+    id: '4',
+    type: 'follow',
+    user: { id: 'u5', name: 'valorant_fan', avatarUrl: 'https://i.pravatar.cc/100?img=5' },
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1 day ago
+  },
+];
+
 
 const io = new SocketIOServer(server, {
   cors: {

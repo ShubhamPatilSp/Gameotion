@@ -21,6 +21,22 @@ client.interceptors.request.use(
   }
 );
 
+// Log API errors for easier debugging on device
+client.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    try {
+      const method = error?.config?.method?.toUpperCase?.() || 'UNKNOWN';
+      const url = error?.config?.url || 'UNKNOWN_URL';
+      const status = error?.response?.status;
+      const data = error?.response?.data;
+      // Keep logs lightweight to avoid crashing older devices
+      console.warn('[API]', method, url, status ?? '', typeof data === 'object' ? JSON.stringify(data) : String(data || ''));
+    } catch {}
+    return Promise.reject(error);
+  }
+);
+
 export default client;
 
 

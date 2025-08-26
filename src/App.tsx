@@ -25,6 +25,7 @@ import { gamerTheme } from '@/styles/gamer_theme';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MainStackParamList } from './navigation/types';
 import SearchScreen from '@/screens/SearchScreen';
+import NotificationsScreen from '@/screens/NotificationsScreen';
 
 const AuthStackNav = createNativeStackNavigator();
 const OnboardingStackNav = createNativeStackNavigator();
@@ -107,6 +108,7 @@ function MainAppStack() {
       <MainStack.Screen name="CreateClan" component={CreateClanScreen} options={{ headerShown: false }} />
       <MainStack.Screen name="Search" component={SearchScreen} />
       <MainStack.Screen name="Profile" component={ProfileScreen} />
+      <MainStack.Screen name="Notifications" component={NotificationsScreen} />
     </MainStack.Navigator>
   );
 }

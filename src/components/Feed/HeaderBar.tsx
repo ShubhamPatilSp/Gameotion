@@ -15,10 +15,10 @@ export default function HeaderBar() {
                     <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.navigate('CreatePost')}>
             <Icon name="plus" size={22} color={gamerTheme.colors.textPrimary} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.iconBtn}>
+          <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.navigate('Search' as never)}>
             <Icon name="magnify" size={22} color={gamerTheme.colors.textPrimary} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.iconBtn}>
+          <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.navigate('Notifications' as never)}>
             <Icon name="bell-outline" size={22} color={gamerTheme.colors.textPrimary} />
             <View style={styles.badge} />
           </TouchableOpacity>

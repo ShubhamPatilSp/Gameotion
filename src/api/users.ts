@@ -22,16 +22,31 @@ export interface User {
 export interface Player {
   id: string;
   name: string;
+  displayName?: string;
   gamerTag?: string;
+  isVerified?: boolean;
   avatarUrl?: string;
-  city?: string;
+  isOnline?: boolean;
+  gameTags?: string[];
+  bio?: string;
+  followers?: number;
+  following?: number;
+  level?: number;
+  location?: string;
+  joined?: string;
+  stats?: {
+    winRate?: string;
+    kdRatio?: string;
+    hoursPlayed?: string;
+    matches?: string;
+  };
   friends?: boolean;
 }
 
 export async function listNearbyUsers(): Promise<User[]> {
   try {
-    // Note: this endpoint is not protected in the demo server
-    const response = await api.get<{ items: User[] }>('/api/users/nearby');
+    // Matches server route in server/app.ts -> app.get('/users/nearby', protect, ...)
+    const response = await api.get<{ items: User[] }>('/users/nearby');
     return response.data.items;
   } catch (error) {
     throw handleApiError(error);
@@ -52,7 +67,8 @@ export async function searchUsers(query: string): Promise<Player[]> {
 
 export async function getUserProfile(userId: string): Promise<Player> {
   try {
-    const response = await api.get<{ user: Player }>(`/api/users/${userId}`);
+    // Matches server route in server/app.ts -> app.get('/users/:id', ...)
+    const response = await api.get<{ user: Player }>(`/users/${userId}`);
     return response.data.user;
   } catch (error) {
     throw handleApiError(error);
