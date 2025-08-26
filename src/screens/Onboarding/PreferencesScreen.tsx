@@ -10,8 +10,13 @@ const GAMES = ['valorant', 'cs2', 'apex', 'lol', 'dota2', 'elden_ring'];
 const LANGS = ['en', 'hi', 'es', 'fr', 'de'];
 
 export default function PreferencesScreen({ navigation }: any) {
-  const profile = useProfile((s) => s.profile);
-  const setProfile = useProfile((s) => s.setProfile);
+  const { profile, setProfile, hydrate, hydrated } = useProfile((s: any) => s);
+
+  React.useEffect(() => {
+    if (!hydrated) {
+      hydrate();
+    }
+  }, [hydrated, hydrate]);
   const [games, setGames] = useState<string[]>(profile.favoriteGames ?? []);
   const [lang, setLang] = useState<string>(profile.languages?.[0] ?? 'en');
   const [country, setCountry] = useState(profile.location?.country ?? '');

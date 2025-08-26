@@ -6,7 +6,6 @@ export type MainStackParamList = {
   MainTabs: undefined;
   Settings: undefined;
   UserFeed: { userId: string };
-  ProfileSetup: undefined;
   CreatePost: undefined;
   Conversation: { conversationId: string; title: string };
   CreateClan: undefined;

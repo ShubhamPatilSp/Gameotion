@@ -52,7 +52,7 @@ export async function searchUsers(query: string): Promise<Player[]> {
 
 export async function getUserProfile(userId: string): Promise<Player> {
   try {
-    const response = await api.get<{ user: Player }>(`/users/${userId}`);
+    const response = await api.get<{ user: Player }>(`/api/users/${userId}`);
     return response.data.user;
   } catch (error) {
     throw handleApiError(error);

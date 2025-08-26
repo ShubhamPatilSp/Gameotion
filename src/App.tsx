@@ -7,6 +7,7 @@ import WelcomeScreen from '@/screens/Auth/WelcomeScreen';
 import SignUpScreen from '@/screens/Auth/SignUpScreen';
 import LoginScreen from '@/screens/Auth/LoginScreen';
 import ProfileSetupScreen from '@/screens/Onboarding/ProfileSetupScreen';
+import PreferencesScreen from '@/screens/Onboarding/PreferencesScreen';
 import { useAuth } from '@/store/auth';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import FeedScreen from '@/screens/FeedScreen';
@@ -26,7 +27,7 @@ import { MainStackParamList } from './navigation/types';
 import SearchScreen from '@/screens/SearchScreen';
 
 const AuthStackNav = createNativeStackNavigator();
-const ProfileStackNav = createNativeStackNavigator();
+const OnboardingStackNav = createNativeStackNavigator();
 const MainStack = createNativeStackNavigator<MainStackParamList>();
 const Tab = createBottomTabNavigator();
 
@@ -52,13 +53,15 @@ function AuthStack() {
   );
 }
 
-function ProfileStack() {
+function OnboardingStack() {
   return (
-    <ProfileStackNav.Navigator screenOptions={{ headerShown: false }}>
-      <ProfileStackNav.Screen name="Profile" component={ProfileScreen} />
-    </ProfileStackNav.Navigator>
+    <OnboardingStackNav.Navigator screenOptions={{ headerShown: false }}>
+      <OnboardingStackNav.Screen name="Preferences" component={PreferencesScreen} />
+      <OnboardingStackNav.Screen name="ProfileSetup" component={ProfileSetupScreen} />
+    </OnboardingStackNav.Navigator>
   );
 }
+
 
 function Tabs() {
   return (
@@ -88,7 +91,7 @@ function Tabs() {
       <Tab.Screen name="Chat" component={ChatScreen} />
       <Tab.Screen name="Tournaments" component={TournamentsScreen} />
       <Tab.Screen name="Clans" component={ClansScreen} />
-      <Tab.Screen name="Profile" component={ProfileStack} />
+      <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );
 }
@@ -99,19 +102,22 @@ function MainAppStack() {
       <MainStack.Screen name="MainTabs" component={Tabs} />
       <MainStack.Screen name="Settings" component={SettingsScreen} />
       <MainStack.Screen name="UserFeed" component={UserFeedScreen} />
-      <MainStack.Screen name="ProfileSetup" component={ProfileSetupScreen} />
       <MainStack.Screen name="CreatePost" component={CreatePostScreen} />
       <MainStack.Screen name="Conversation" component={ConversationScreen} options={{ headerShown: false }} />
       <MainStack.Screen name="CreateClan" component={CreateClanScreen} options={{ headerShown: false }} />
       <MainStack.Screen name="Search" component={SearchScreen} />
+      <MainStack.Screen name="Profile" component={ProfileScreen} />
     </MainStack.Navigator>
   );
 }
 
 export default function App() {
-  const { token, hydrated } = useAuth((s) => ({ token: s.token, hydrated: s.hydrated }));
-  const hydrate = useAuth((s) => s.hydrate);
-  React.useEffect(() => { hydrate(); }, [hydrate]);
+  const { token, user, hydrated, hydrate } = useAuth((s) => s);
+
+  React.useEffect(() => {
+    hydrate();
+  }, [hydrate]);
+
   const queryClient = React.useMemo(() => new QueryClient(), []);
 
   if (!hydrated) {
@@ -126,7 +132,13 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <NavigationContainer theme={navTheme}>
         <StatusBar barStyle="light-content" />
-        {token ? <MainAppStack /> : <AuthStack />}
+        {!token ? (
+          <AuthStack />
+        ) : !user?.onboarded ? (
+          <OnboardingStack />
+        ) : (
+          <MainAppStack />
+        )}
       </NavigationContainer>
     </QueryClientProvider>
   );

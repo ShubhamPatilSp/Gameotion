@@ -1,18 +1,7 @@
 import axios from 'axios';
-import API_URL from './client';
-import { getToken } from '@/auth/auth';
+import client from './client';
 
-export const api = axios.create({
-  baseURL: API_URL,
-});
-
-api.interceptors.request.use(async (config) => {
-  const token = await getToken();
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
+export const api = client;
 
 export function handleApiError(error: unknown): Error {
   if (axios.isAxiosError(error) && error.response) {

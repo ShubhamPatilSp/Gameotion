@@ -33,8 +33,8 @@ export default function SignUpScreen() {
     setLoading(true);
     try {
       const { token, user } = await signUp(email, password);
-      await setSession(token, user);
-      navigation.navigate('ProfileSetup');
+      await setSession(token, { ...user, onboarded: false });
+      // App.tsx will now handle navigating to the correct stack.
     } catch (e: any) {
       const message = e.message || 'An unexpected error occurred.';
       setError(message);
