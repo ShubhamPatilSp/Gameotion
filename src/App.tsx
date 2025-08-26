@@ -12,7 +12,6 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import FeedScreen from '@/screens/FeedScreen';
 import DiscoverScreen from '@/screens/DiscoverScreen';
 import ChatScreen from '@/screens/ChatScreen';
-import SearchScreen from '@/screens/SearchScreen';
 import ProfileScreen from '@/screens/ProfileScreen';
 import TournamentsScreen from '@/screens/TournamentsScreen';
 import ClansScreen from '@/screens/ClansScreen';
@@ -24,8 +23,10 @@ import CreateClanScreen from '@/screens/CreateClanScreen';
 import { gamerTheme } from '@/styles/gamer_theme';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MainStackParamList } from './navigation/types';
+import SearchScreen from '@/screens/SearchScreen';
 
 const AuthStackNav = createNativeStackNavigator();
+const ProfileStackNav = createNativeStackNavigator();
 const MainStack = createNativeStackNavigator<MainStackParamList>();
 const Tab = createBottomTabNavigator();
 
@@ -51,6 +52,14 @@ function AuthStack() {
   );
 }
 
+function ProfileStack() {
+  return (
+    <ProfileStackNav.Navigator screenOptions={{ headerShown: false }}>
+      <ProfileStackNav.Screen name="Profile" component={ProfileScreen} />
+    </ProfileStackNav.Navigator>
+  );
+}
+
 function Tabs() {
   return (
     <Tab.Navigator
@@ -61,13 +70,13 @@ function Tabs() {
         tabBarActiveTintColor: gamerTheme.colors.primary,
         tabBarInactiveTintColor: gamerTheme.colors.textSecondary,
         tabBarIcon: ({ color, size }: { color: string; size: number }) => {
-          const map: Record<string, string> = {
-            Home: 'home-variant-outline',
-            Discover: 'magnify',
-            Chat: 'chat-outline',
-            Tournaments: 'trophy-outline',
-            Clans: 'account-group-outline',
-            Profile: 'account-circle-outline',
+          const map: { [key: string]: string } = {
+            Home: 'home-variant',
+            Discover: 'compass',
+            Chat: 'message-text',
+            Tournaments: 'trophy',
+            Clans: 'account-group',
+            Profile: 'account-circle',
           };
           const name = map[route.name] ?? 'circle';
           return <Icon name={name} color={color} size={size} />;
@@ -79,7 +88,7 @@ function Tabs() {
       <Tab.Screen name="Chat" component={ChatScreen} />
       <Tab.Screen name="Tournaments" component={TournamentsScreen} />
       <Tab.Screen name="Clans" component={ClansScreen} />
-      <Tab.Screen name="Profile" component={ProfileScreen} />
+      <Tab.Screen name="Profile" component={ProfileStack} />
     </Tab.Navigator>
   );
 }
