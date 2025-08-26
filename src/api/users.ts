@@ -41,6 +41,7 @@ export interface Player {
     matches?: string;
   };
   friends?: boolean;
+  followingList?: string[];
 }
 
 export async function listNearbyUsers(): Promise<User[]> {
@@ -70,6 +71,24 @@ export async function getUserProfile(userId: string): Promise<Player> {
     // Matches server route in server/app.ts -> app.get('/users/:id', ...)
     const response = await api.get<{ user: Player }>(`/users/${userId}`);
     return response.data.user;
+  } catch (error) {
+    throw handleApiError(error);
+  }
+}
+
+export async function followUser(userId: string): Promise<{ success: boolean }> {
+  try {
+    const response = await api.post(`/api/users/${userId}/follow`);
+    return response.data;
+  } catch (error) {
+    throw handleApiError(error);
+  }
+}
+
+export async function unfollowUser(userId: string): Promise<{ success: boolean }> {
+  try {
+    const response = await api.post(`/api/users/${userId}/unfollow`);
+    return response.data;
   } catch (error) {
     throw handleApiError(error);
   }

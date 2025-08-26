@@ -20,6 +20,8 @@ interface User {
   bio?: string;
   followers?: number;
   following?: number;
+  followersList?: string[]; // Array of user IDs
+  followingList?: string[]; // Array of user IDs
   level?: number;
   location?: string;
   joined?: string;
@@ -158,6 +160,8 @@ function seedInitialData() {
         matches: '1,234',
       },
       onboarded: true,
+      followersList: [],
+      followingList: [],
     };
     const demoUser2: User = {
       id: 'u2',
@@ -166,6 +170,8 @@ function seedInitialData() {
       name: 'Demo User 2',
       avatarUrl: 'https://i.pravatar.cc/100?u=demo@gameotion.com',
       onboarded: true,
+      followersList: [],
+      followingList: [],
     };
     users.push(defaultUser, demoUser2);
     demoUsers.push(defaultUser, demoUser2);
@@ -361,6 +367,60 @@ app.get('/api/users/search', protect, (req: Request, res: Response) => {
     );
 
   res.json({ items: results });
+});
+
+// Follow a user
+app.post('/api/users/:id/follow', protect, (req: Request, res: Response) => {
+  const currentUser = (req as AuthRequest).user!;
+  const targetUserId = req.params.id;
+
+  if (currentUser.id === targetUserId) {
+    return res.status(400).json({ error: 'Cannot follow yourself' });
+  }
+
+  const targetUser = users.find(u => u.id === targetUserId);
+  if (!targetUser) {
+    return res.status(404).json({ error: 'Target user not found' });
+  }
+
+  // Update current user's following list
+  if (!currentUser.followingList?.includes(targetUserId)) {
+    currentUser.followingList = [...(currentUser.followingList || []), targetUserId];
+    currentUser.following = (currentUser.following || 0) + 1;
+  }
+
+  // Update target user's followers list
+  if (!targetUser.followersList?.includes(currentUser.id)) {
+    targetUser.followersList = [...(targetUser.followersList || []), currentUser.id];
+    targetUser.followers = (targetUser.followers || 0) + 1;
+  }
+
+  res.json({ success: true, following: currentUser.following, followers: targetUser.followers });
+});
+
+// Unfollow a user
+app.post('/api/users/:id/unfollow', protect, (req: Request, res: Response) => {
+  const currentUser = (req as AuthRequest).user!;
+  const targetUserId = req.params.id;
+
+  const targetUser = users.find(u => u.id === targetUserId);
+  if (!targetUser) {
+    return res.status(404).json({ error: 'Target user not found' });
+  }
+
+  // Update current user's following list
+  if (currentUser.followingList?.includes(targetUserId)) {
+    currentUser.followingList = currentUser.followingList.filter(id => id !== targetUserId);
+    currentUser.following = Math.max(0, (currentUser.following || 0) - 1);
+  }
+
+  // Update target user's followers list
+  if (targetUser.followersList?.includes(currentUser.id)) {
+    targetUser.followersList = targetUser.followersList.filter(id => id !== currentUser.id);
+    targetUser.followers = Math.max(0, (targetUser.followers || 0) - 1);
+  }
+
+  res.json({ success: true, following: currentUser.following, followers: targetUser.followers });
 });
 
 // --- User Routes ---

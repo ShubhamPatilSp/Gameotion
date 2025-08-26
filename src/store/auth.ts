@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 
-export type User = { id: string; name: string; email: string; avatarUrl: string; gamerTag?: string; onboarded?: boolean; location?: { country?: string; city?: string; coords?: { lat: number; lng: number } }; };
+export type User = { id: string; name: string; email: string; avatarUrl: string; gamerTag?: string; onboarded?: boolean; location?: { country?: string; city?: string; coords?: { lat: number; lng: number } }; followingList?: string[]; };
 
 type AuthState = {
   token: string | null;

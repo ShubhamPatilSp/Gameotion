@@ -78,7 +78,7 @@ function Tabs() {
             Home: 'home-variant',
             Discover: 'compass',
             Chat: 'message-text',
-            Tournaments: 'trophy',
+            // Tournaments: 'trophy',
             Clans: 'account-group',
             Profile: 'account-circle',
           };
@@ -90,7 +90,7 @@ function Tabs() {
       <Tab.Screen name="Home" component={FeedScreen} />
       <Tab.Screen name="Discover" component={DiscoverScreen} />
       <Tab.Screen name="Chat" component={ChatScreen} />
-      <Tab.Screen name="Tournaments" component={TournamentsScreen} />
+      {/* <Tab.Screen name="Tournaments" component={TournamentsScreen} /> */}
       <Tab.Screen name="Clans" component={ClansScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
