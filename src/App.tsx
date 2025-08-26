@@ -1,27 +1,33 @@
 import React from 'react';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { StatusBar } from 'react-native';
+import { StatusBar, ActivityIndicator, View, Text } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import EntryScreen from '@/screens/Onboarding/EntryScreen';
-import PreferencesScreen from '@/screens/Onboarding/PreferencesScreen';
+import WelcomeScreen from '@/screens/Auth/WelcomeScreen';
+import SignUpScreen from '@/screens/Auth/SignUpScreen';
+import LoginScreen from '@/screens/Auth/LoginScreen';
 import ProfileSetupScreen from '@/screens/Onboarding/ProfileSetupScreen';
-import { useProfile } from '@/store/profile';
+import { useAuth } from '@/store/auth';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import FeedScreen from '@/screens/FeedScreen';
 import DiscoverScreen from '@/screens/DiscoverScreen';
 import ChatScreen from '@/screens/ChatScreen';
+import SearchScreen from '@/screens/SearchScreen';
 import ProfileScreen from '@/screens/ProfileScreen';
 import TournamentsScreen from '@/screens/TournamentsScreen';
 import ClansScreen from '@/screens/ClansScreen';
 import SettingsScreen from '@/screens/SettingsScreen';
 import UserFeedScreen from '@/screens/UserFeedScreen';
-import { gamerTheme } from '@/theme/theme';
+import CreatePostScreen from '@/screens/CreatePostScreen';
+import ConversationScreen from '@/screens/ConversationScreen';
+import CreateClanScreen from '@/screens/CreateClanScreen';
+import { gamerTheme } from '@/styles/gamer_theme';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { MainStackParamList } from './navigation/types';
 
+const AuthStackNav = createNativeStackNavigator();
+const MainStack = createNativeStackNavigator<MainStackParamList>();
 const Tab = createBottomTabNavigator();
-const Stack = createNativeStackNavigator();
-const MainStack = createNativeStackNavigator();
 
 const navTheme = {
   ...DefaultTheme,
@@ -32,22 +38,31 @@ const navTheme = {
     text: gamerTheme.colors.textPrimary,
     primary: gamerTheme.colors.primary,
     border: gamerTheme.colors.border,
-    notification: gamerTheme.colors.accent,
   },
 };
+
+function AuthStack() {
+  return (
+    <AuthStackNav.Navigator screenOptions={{ headerShown: false }}>
+      <AuthStackNav.Screen name="Welcome" component={WelcomeScreen} />
+      <AuthStackNav.Screen name="SignUp" component={SignUpScreen} />
+      <AuthStackNav.Screen name="Login" component={LoginScreen} />
+    </AuthStackNav.Navigator>
+  );
+}
 
 function Tabs() {
   return (
     <Tab.Navigator
-      screenOptions={({ route }: { route: { name: string } }) => ({
+      screenOptions={({ route }: { route: any }) => ({
         headerShown: false,
+        tabBarShowLabel: false,
         tabBarStyle: { backgroundColor: gamerTheme.colors.surface, borderTopColor: gamerTheme.colors.border },
-        tabBarLabelStyle: { fontSize: 11 },
         tabBarActiveTintColor: gamerTheme.colors.primary,
         tabBarInactiveTintColor: gamerTheme.colors.textSecondary,
         tabBarIcon: ({ color, size }: { color: string; size: number }) => {
           const map: Record<string, string> = {
-            Home: 'home-outline',
+            Home: 'home-variant-outline',
             Discover: 'magnify',
             Chat: 'chat-outline',
             Tournaments: 'trophy-outline',
@@ -75,34 +90,35 @@ function MainAppStack() {
       <MainStack.Screen name="MainTabs" component={Tabs} />
       <MainStack.Screen name="Settings" component={SettingsScreen} />
       <MainStack.Screen name="UserFeed" component={UserFeedScreen} />
+      <MainStack.Screen name="ProfileSetup" component={ProfileSetupScreen} />
+      <MainStack.Screen name="CreatePost" component={CreatePostScreen} />
+      <MainStack.Screen name="Conversation" component={ConversationScreen} options={{ headerShown: false }} />
+      <MainStack.Screen name="CreateClan" component={CreateClanScreen} options={{ headerShown: false }} />
+      <MainStack.Screen name="Search" component={SearchScreen} />
     </MainStack.Navigator>
   );
 }
 
 export default function App() {
-  const onboarded = useProfile((s) => s.onboarded);
-  const hydrate = useProfile((s) => s.hydrate);
+  const { token, hydrated } = useAuth((s) => ({ token: s.token, hydrated: s.hydrated }));
+  const hydrate = useAuth((s) => s.hydrate);
   React.useEffect(() => { hydrate(); }, [hydrate]);
   const queryClient = React.useMemo(() => new QueryClient(), []);
+
+  if (!hydrated) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator />
+      </View>
+    );
+  }
 
   return (
     <QueryClientProvider client={queryClient}>
       <NavigationContainer theme={navTheme}>
         <StatusBar barStyle="light-content" />
-        {!onboarded ? (
-          <Stack.Navigator screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="Entry" component={EntryScreen} />
-            <Stack.Screen name="Preferences" component={PreferencesScreen} />
-            <Stack.Screen name="ProfileSetup" component={ProfileSetupScreen} />
-            <Stack.Screen name="AppTabs" component={Tabs} />
-            <Stack.Screen name="Settings" component={SettingsScreen} />
-          </Stack.Navigator>
-        ) : (
-          <MainAppStack />
-        )}
+        {token ? <MainAppStack /> : <AuthStack />}
       </NavigationContainer>
     </QueryClientProvider>
   );
 }
-
-

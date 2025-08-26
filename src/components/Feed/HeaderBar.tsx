@@ -1,15 +1,20 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { gamerTheme } from '@/theme/theme';
 
 export default function HeaderBar() {
+  const navigation = useNavigation();
   return (
     <View style={styles.container}>
       <Text style={styles.screenTitle}>Feed</Text>
       <View style={styles.row}>
         <Text style={styles.title}>GamerVerse</Text>
         <View style={styles.actions}>
+                    <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.navigate('CreatePost')}>
+            <Icon name="plus" size={22} color={gamerTheme.colors.textPrimary} />
+          </TouchableOpacity>
           <TouchableOpacity style={styles.iconBtn}>
             <Icon name="magnify" size={22} color={gamerTheme.colors.textPrimary} />
           </TouchableOpacity>

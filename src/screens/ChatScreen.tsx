@@ -1,31 +1,19 @@
 import React from 'react';
-import { View, Text, StyleSheet, TextInput, FlatList, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TextInput, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import LinearGradient from 'react-native-linear-gradient';
+import { useNavigation } from '@react-navigation/native';
+import { useQuery } from '@tanstack/react-query';
 import { gamerTheme } from '@/theme/theme';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-
-type Conversation = {
-  id: string;
-  title: string;
-  isGroup?: boolean;
-  members?: number;
-  gameTag?: string;
-  extraTag?: string;
-  snippet: string;
-  time: string; // e.g., '2m ago'
-  unread?: number;
-};
-
-const DATA: Conversation[] = [
-  { id: 'c1', title: 'ProGamer123', gameTag: 'Valorant', extraTag: 'Diamond II', snippet: "Ready for ranked? Let's push to Immortal!", time: '2m ago', unread: 2 },
-  { id: 'c2', title: 'Diamond Demons', isGroup: true, members: 5, gameTag: 'BGMI', snippet: 'GG everyone! Same time tomorrow?', time: '15m ago' },
-  { id: 'c3', title: 'Summer Championship', isGroup: true, members: 64, gameTag: 'COD Mobile', snippet: 'Bracket updated - check your next match', time: '1h ago', unread: 1 },
-  { id: 'c4', title: 'Neon Warriors', isGroup: true, members: 127, gameTag: 'Multiple', snippet: 'Welcome new members! Check the events channel', time: '3h ago' },
-  { id: 'c5', title: 'SkillShot', gameTag: 'Apex Legends', snippet: 'That clutch was insane!', time: '1d ago' },
-];
+import { listConversations, Conversation } from '@/api/chat';
+import { formatDistanceToNow } from 'date-fns';
 
 export default function ChatScreen() {
+  const navigation = useNavigation();
+  const { data: conversations, isLoading } = useQuery<Conversation[]>({
+    queryKey: ['conversations'],
+    queryFn: listConversations,
+  });
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Header */}
@@ -43,37 +31,22 @@ export default function ChatScreen() {
       </View>
 
       {/* Filters */}
-      <View style={styles.chipsRow}>
-        <FilterChip text="All" active />
-        <FilterChip text="Squads" />
-        <FilterChip text="Tournaments" />
-        <FilterChip text="Clans" />
-      </View>
-
-      {/* Quick Actions */}
-      <View style={styles.actionsRow}>
-        <ActionCard icon="account-group-outline" title="Create Squad" />
-        <ActionCard icon="gamepad-variant-outline" title="Find Match" highlighted />
-      </View>
-
+      
       {/* Conversation List */}
-      <FlatList
-        data={DATA}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <ChatItem item={item} />}
-        contentContainerStyle={{ paddingBottom: 24 }}
-      />
+            {isLoading ? (
+        <ActivityIndicator color={gamerTheme.colors.primary} style={{ flex: 1 }} />
+      ) : (
+        <FlatList
+          data={conversations}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => <ChatItem item={item} onPress={() => navigation.navigate('Conversation', { conversationId: item.id, title: item.title })} />}
+          contentContainerStyle={{ paddingBottom: 24 }}
+        />
+      )}
     </SafeAreaView>
   );
 }
 
-function FilterChip({ text, active = false }: { text: string; active?: boolean }) {
-  return (
-    <View style={[styles.chip, active && styles.chipActive]}>
-      <Text style={[styles.chipText, active && styles.chipTextActive]}>{text}</Text>
-    </View>
-  );
-}
 
 function Tag({ label }: { label: string }) {
   return (
@@ -81,9 +54,9 @@ function Tag({ label }: { label: string }) {
   );
 }
 
-function ChatItem({ item }: { item: Conversation }) {
+function ChatItem({ item, onPress }: { item: Conversation; onPress: () => void }) {
   return (
-    <View style={styles.itemWrap}>
+    <TouchableOpacity style={styles.itemWrap} onPress={onPress}>
       <View style={styles.itemRow}>
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>{item.title.charAt(0)}</Text>
@@ -97,9 +70,9 @@ function ChatItem({ item }: { item: Conversation }) {
           <View style={styles.itemHeaderRowBetween}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               <Text style={styles.itemTitle}>{item.title}</Text>
-              {item.isGroup && <Text style={styles.metaText}>{item.members} members</Text>}
+                            {item.isGroup && <Text style={styles.metaText}>{item.membersCount} members</Text>}
             </View>
-            <Text style={styles.metaText}>{item.time}</Text>
+                        <Text style={styles.metaText}>{formatDistanceToNow(new Date(item.time), { addSuffix: true })}</Text>
           </View>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
             {item.gameTag && <Tag label={item.gameTag} />}
@@ -111,29 +84,11 @@ function ChatItem({ item }: { item: Conversation }) {
           <View style={styles.unread}><Text style={styles.unreadText}>{item.unread}</Text></View>
         )}
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 
-function ActionCard({ icon, title, highlighted }: { icon: string; title: string; highlighted?: boolean }) {
-  if (highlighted) {
-    return (
-      <LinearGradient colors={[gamerTheme.colors.primary, '#FF33B0']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ flex: 1, borderRadius: 14, padding: 1 }}>
-        <View style={[styles.actionCard, { borderWidth: 0 }]}>
-          <Icon name={icon} size={22} color={gamerTheme.colors.textPrimary} />
-          <Text style={styles.actionTitle}>{title}</Text>
-        </View>
-      </LinearGradient>
-    );
-  }
-  return (
-    <View style={styles.actionCard}>
-      <Icon name={icon} size={22} color={gamerTheme.colors.textPrimary} />
-      <Text style={styles.actionTitle}>{title}</Text>
-    </View>
-  );
-}
-
+  
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: gamerTheme.colors.background, paddingHorizontal: 12 },
   headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 4, paddingBottom: 8 },

@@ -1,11 +1,14 @@
 import React from 'react';
-import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { useQuery } from '@tanstack/react-query';
+import { listNearbyUsers, User } from '@/api/users';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { gamerTheme } from '@/theme/theme';
+import { gamerTheme } from '@/styles/gamer_theme';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import LinearGradient from 'react-native-linear-gradient';
 
 export default function DiscoverScreen() {
+  const { data: nearbyUsers, isLoading, error } = useQuery<User[]>({ queryKey: ['users', 'nearby'], queryFn: listNearbyUsers });
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView
@@ -50,11 +53,11 @@ export default function DiscoverScreen() {
 
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Players Near You</Text>
-        <Text style={styles.sectionCount}>3 found</Text>
+        {nearbyUsers && !isLoading && <Text style={styles.sectionCount}>{nearbyUsers.length} found</Text>}
       </View>
-        <PlayerCard name="ShadowStrike" distance="2.3 km" city="Mumbai" roles="Ranked Squad" tags={[{ label: 'Valorant' }, { label: 'Diamond II' }]} />
-        <PlayerCard name="FireStorm" distance="5.1 km" city="Delhi" roles="Casual Games" tags={[{ label: 'BGMI' }, { label: 'Platinum II' }]} />
-        <PlayerCard name="NeonBlade" distance="12.8 km" city="Bangalore" roles="Tournament Team" tags={[{ label: 'COD Mobile' }, { label: 'Gold I' }]} />
+        {isLoading && <ActivityIndicator color={gamerTheme.colors.primary} style={{ marginVertical: 20 }} />}
+        {error && <Text style={styles.errorText}>Could not fetch players.</Text>}
+        {nearbyUsers?.map((user) => <PlayerCard key={user.id} user={user} />)}
       </ScrollView>
     </SafeAreaView>
   );
@@ -74,6 +77,7 @@ const styles = StyleSheet.create({
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, marginTop: 6, marginBottom: 8 },
   sectionTitle: { color: gamerTheme.colors.textPrimary, fontWeight: '900' },
   sectionCount: { color: gamerTheme.colors.textSecondary, fontSize: 12 },
+  errorText: { color: gamerTheme.colors.error, textAlign: 'center', marginVertical: 20 },
 });
 
 function FilterChip({ text, active = false }: { text: string; active?: boolean }) {
@@ -118,7 +122,8 @@ function DiscoverCard({ icon, title, subtitle, ctaText, muted }: { icon: string;
   );
 }
 
-function PlayerCard({ name, distance, city, roles, tags }: { name: string; distance: string; city: string; roles: string; tags: { label: string }[] }) {
+function PlayerCard({ user }: { user: User }) {
+  const { name, distance, location, roles, tags } = user;
   return (
     <View style={{ marginHorizontal: 16, marginBottom: 12, borderRadius: 16, borderWidth: 1, borderColor: gamerTheme.colors.border, backgroundColor: gamerTheme.colors.surface, padding: 14 }}>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -128,7 +133,7 @@ function PlayerCard({ name, distance, city, roles, tags }: { name: string; dista
           </View>
           <Text style={{ color: gamerTheme.colors.textPrimary, fontWeight: '800' }}>{name}</Text>
         </View>
-        <Text style={{ color: gamerTheme.colors.textSecondary, fontSize: 12 }}>{distance} • {city}</Text>
+        <Text style={{ color: gamerTheme.colors.textSecondary, fontSize: 12 }}>{distance} • {location.city}</Text>
       </View>
       <View style={{ flexDirection: 'row', gap: 6, marginTop: 8 }}>
         {tags.map((t) => (

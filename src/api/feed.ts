@@ -59,14 +59,20 @@ export async function fetchUserPosts(params: { userId: string; page: number; lim
   return res.data as { items: FeedPost[]; nextPage: number | null };
 }
 
-export async function likePost(postId: string, action: 'like' | 'unlike' = 'like'): Promise<number> {
-  const res = await api.post(`/posts/${postId}/like`, { action });
-  return res.data.likesCount as number;
-}
 
 export async function bookmarkPost(postId: string): Promise<boolean> {
   await api.post(`/posts/${postId}/bookmark`);
   return true;
+}
+
+export async function likePost(postId: string): Promise<number> {
+  const res = await api.post(`/posts/${postId}/like`);
+  return res.data.likesCount as number;
+}
+
+export async function unlikePost(postId: string): Promise<number> {
+  const res = await api.delete(`/posts/${postId}/like`);
+  return res.data.likesCount as number;
 }
 
 export async function sharePost(postId: string): Promise<number> {
@@ -82,6 +88,11 @@ export async function commentPost(postId: string, text: string): Promise<number>
 export async function listComments(postId: string): Promise<{ id: string; user: { id: string; name: string; avatarUrl: string }; text: string; createdAt: string }[]> {
   const res = await api.get(`/posts/${postId}/comments`);
   return res.data.items ?? [];
+}
+
+export async function createPost(post: { contentText: string; gameTags?: string[]; media?: Media[]; city?: string }): Promise<FeedPost> {
+  const res = await api.post('/posts', post);
+  return res.data.post;
 }
 
 export async function addComment(postId: string, text: string): Promise<{ id: string; user: { id: string; name: string; avatarUrl: string }; text: string; createdAt: string }>{

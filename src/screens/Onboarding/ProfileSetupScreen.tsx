@@ -1,42 +1,64 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, Image } from 'react-native';
+import { View, Text, StyleSheet, Image, SafeAreaView, Alert } from 'react-native';
 import Button from '@/components/Button';
 import { gamerTheme } from '@/theme/theme';
-import ProgressDots from '@/components/ProgressDots';
-import { useProfile } from '@/store/profile';
+import { useAuth } from '@/store/auth';
+import { useMutation } from '@tanstack/react-query';
+import { updateProfile } from '@/api/user';
+import Input from '@/components/Input';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
-export default function ProfileSetupScreen({ navigation }: any) {
-  const profile = useProfile((s) => s.profile);
-  const setProfile = useProfile((s) => s.setProfile);
-  const complete = useProfile((s) => s.completeOnboarding);
-  const [displayName, setDisplayName] = useState(profile.displayName ?? 'NovaStriker');
-  const [gamerTag, setGamerTag] = useState(profile.gamerTag ?? 'novastriker');
-  const [avatarUrl, setAvatarUrl] = useState(profile.avatarUrl ?? 'https://i.pravatar.cc/150?img=65');
+type RootStackParamList = {
+  ProfileSetup: undefined;
+  AppTabs: undefined;
+};
 
-  const finish = async () => {
-    await setProfile({ displayName, gamerTag, avatarUrl, createdAt: new Date().toISOString() });
-    await complete();
-    navigation.replace('AppTabs');
+type Props = NativeStackScreenProps<RootStackParamList, 'ProfileSetup'>;
+
+export default function ProfileSetupScreen({ navigation }: Props) {
+  const { user, setUser } = useAuth((s) => ({ user: s.user, setUser: s.setUser }));
+  const [displayName, setDisplayName] = useState(user?.name || '');
+  const [gamerTag, setGamerTag] = useState(user?.email ? user.email.split('@')[0] : '');
+  const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl || `https://i.pravatar.cc/150?u=${user?.email}`);
+
+  const mutation = useMutation({ 
+    mutationFn: updateProfile,
+    onSuccess: (response) => {
+      setUser(response.data.user);
+      // The user is now onboarded, and the main app stack will be shown.
+      // App.tsx will handle the navigation state.
+    },
+    onError: (error: any) => {
+      Alert.alert('Error', error.response?.data?.error || 'Could not update profile.');
+    },
+  });
+
+  const finish = () => {
+    if (mutation.isPending) return;
+    mutation.mutate({ displayName, gamerTag, avatarUrl });
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Profile</Text>
-      <ProgressDots step={2} total={2} />
+    <SafeAreaView style={styles.container}>
+      <Text style={styles.title}>Set Up Your Profile</Text>
       <Image source={{ uri: avatarUrl }} style={styles.avatar} />
-      <TextInput value={avatarUrl} onChangeText={setAvatarUrl} style={styles.input} placeholder="Avatar URL" placeholderTextColor={gamerTheme.colors.textSecondary} />
-      <TextInput value={displayName} onChangeText={setDisplayName} style={styles.input} placeholder="Display name" placeholderTextColor={gamerTheme.colors.textSecondary} />
-      <TextInput value={gamerTag} onChangeText={setGamerTag} style={styles.input} placeholder="Gamer tag" placeholderTextColor={gamerTheme.colors.textSecondary} />
-      <Button title="Finish" onPress={finish} />
-    </View>
+      <Input label="Avatar URL" value={avatarUrl} onChangeText={setAvatarUrl} placeholder="https://your-avatar-url.com" />
+      <Input label="Display Name" value={displayName} onChangeText={setDisplayName} placeholder="Your awesome name" />
+      <Input label="Gamer Tag" value={gamerTag} onChangeText={setGamerTag} placeholder="your-gamer-tag" />
+      <View style={styles.actions}>
+        <Button title="Finish" onPress={finish} loading={mutation.isPending} />
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: gamerTheme.colors.background, padding: 20 },
-  title: { color: gamerTheme.colors.textPrimary, fontSize: 20, fontWeight: '800', marginBottom: 12 },
-  avatar: { width: 96, height: 96, borderRadius: 48, alignSelf: 'center', marginBottom: 12 },
-  input: { backgroundColor: gamerTheme.colors.surface, borderColor: gamerTheme.colors.border, borderWidth: 1, color: gamerTheme.colors.textPrimary, borderRadius: 12, paddingHorizontal: 12, marginBottom: 12 },
+  title: { color: gamerTheme.colors.textPrimary, fontSize: 24, fontWeight: '800', marginBottom: 24, textAlign: 'center' },
+  avatar: { width: 96, height: 96, borderRadius: 48, alignSelf: 'center', marginBottom: 24 },
+  actions: {
+    marginTop: 'auto',
+  },
 });
 
 

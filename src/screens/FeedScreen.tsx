@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { gamerTheme } from '@/theme/theme';
-import { useProfile } from '@/store/profile';
+import { useAuth } from '@/store/auth';
 import api from '@/api/client';
 import EventCard from '@/components/Feed/EventCard';
 import HeaderBar from '@/components/Feed/HeaderBar';
@@ -15,7 +15,7 @@ import PostMetaBar from '@/components/Feed/PostMetaBar';
 import LiveBanner from '@/components/Feed/LiveBanner';
 import PostHeader from '@/components/Feed/PostHeader';
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { fetchFeedPage, type FeedItem, addComment, listComments, sharePost } from '@/api/feed';
+import { fetchFeedPage, type FeedItem, addComment, listComments, sharePost, likePost, unlikePost } from '@/api/feed';
 
 type Media = { url: string; type: 'image' | 'video' };
 type Post = {
@@ -59,7 +59,7 @@ export default function FeedScreen() {
   const [posts, setPosts] = useState<Post[]>(fallbackPosts as any);
   const [loading, setLoading] = useState(false);
   const [online, setOnline] = useState<boolean>(true);
-  const profile = useProfile((s) => s.profile);
+  const user = useAuth((s) => s.user);
   const [filters, setFilters] = useState<{ scope: 'all' | 'friends' | 'nearby' | 'tournaments' | 'clips'; game?: string }>({ scope: 'all' });
 
   const {
@@ -71,13 +71,13 @@ export default function FeedScreen() {
     fetchNextPage,
     hasNextPage,
   } = useInfiniteQuery<{ items: FeedItem[]; nextPage: number | null }>({
-    queryKey: ['feed', filters, profile.location?.city],
+    queryKey: ['feed', filters, user?.location?.city],
     initialPageParam: 1,
     queryFn: ({ pageParam }) => fetchFeedPage({
       page: Number(pageParam || 1),
       limit: 15,
       filters,
-      preferredCity: profile.location?.city,
+      preferredCity: user?.location?.city,
     }),
     getNextPageParam: (last) => last?.nextPage ?? null,
     staleTime: 15_000,
@@ -108,7 +108,20 @@ export default function FeedScreen() {
     const views = (item as any).viewsCount || 0;
     const [shares, setShares] = React.useState<number>(Math.floor(views / 20));
     const [showComment, setShowComment] = React.useState(false);
-    const handleLike = () => { setLikes((n) => (liked ? Math.max(0, n - 1) : n + 1)); setLiked((v) => !v); };
+        const handleLike = () => {
+      const originalLiked = liked;
+      const originalLikes = likes;
+
+      setLiked(!originalLiked);
+      setLikes((n) => (originalLiked ? Math.max(0, n - 1) : n + 1));
+
+      const apiCall = originalLiked ? unlikePost(item.id) : likePost(item.id);
+      apiCall.catch(() => {
+        setLiked(originalLiked);
+        setLikes(originalLikes);
+        Alert.alert('Error', 'Could not update like status.');
+      });
+    };
     const handleComment = () => setShowComment(true);
     const handleShare = async () => {
       try {
